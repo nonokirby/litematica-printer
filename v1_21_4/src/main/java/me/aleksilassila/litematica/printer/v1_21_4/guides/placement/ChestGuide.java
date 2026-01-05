@@ -1,6 +1,7 @@
 package me.aleksilassila.litematica.printer.v1_21_4.guides.placement;
 
 import me.aleksilassila.litematica.printer.v1_21_4.SchematicBlockState;
+import me.aleksilassila.litematica.printer.v1_21_4.config.PrinterConfig;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
 import net.minecraft.block.enums.ChestType;
@@ -46,6 +47,21 @@ public class ChestGuide extends GeneralPlacementGuide {
 
         if (targetFacing == null || targetType == null) return sides;
 
+        // If airplace is enabled, use rigid logic to determine placement face
+        if (PrinterConfig.PRINTER_AIRPLACE.getBooleanValue()) {
+            if (targetType == ChestType.SINGLE) {
+                sides.add(Direction.DOWN);
+                return sides;
+            } else if (targetType == ChestType.LEFT) {
+                sides.add(targetFacing.rotateYCounterclockwise());
+                return sides;
+            } else if (targetType == ChestType.RIGHT) {
+                sides.add(targetFacing.rotateYClockwise());
+                return sides;
+            }
+        }
+
+        // If airplace is disabled, gather all valid placement faces
         for (Direction direction : Direction.values()) {
             if (targetType == ChestType.SINGLE && !willConnectToSide(state, direction)) {
                 sides.add(direction);
