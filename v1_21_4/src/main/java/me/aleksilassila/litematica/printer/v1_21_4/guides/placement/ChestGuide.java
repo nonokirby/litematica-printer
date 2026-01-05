@@ -54,7 +54,7 @@ public class ChestGuide extends GeneralPlacementGuide {
             }
         }
 
-        // Place single chests if cannot connect any existing chests
+        // Place single chests if we cannot connect any existing chests
         if (sides.isEmpty()) {
             for (Direction direction : Direction.values()) {
                 if (!wantsToConnectToSide(state, direction) && !willConnectToSide(state, direction)) {
