@@ -302,7 +302,7 @@ public class GeneralPlacementGuide extends PlacementGuide {
         // First quick attempt: original center (UP side) (fast path)
         {
             BlockHitResult hr = new BlockHitResult(Vec3d.ofCenter(state.blockPos), Direction.UP, state.blockPos, true);
-            PrinterPlacementContext quick = new PrinterPlacementContext(player, hr, requiredItem, slot, null, false);
+            PrinterPlacementContext quick = new PrinterPlacementContext(player, hr, requiredItem, slot, null, currentState.getBlock() == Blocks.CHEST);
             BlockState res = getRequiredItemAsBlock(player).orElse(targetState.getBlock()).getPlacementState(quick);
             if (res != null && correctObserverPlacement(targetState, res) && statesEqual(res, targetState)) {
                 contextCache = quick;
@@ -336,7 +336,7 @@ public class GeneralPlacementGuide extends PlacementGuide {
                             };
 
                             BlockHitResult hitResult = new BlockHitResult(hitVec, side.getOpposite(), state.blockPos, true);
-                            PrinterPlacementContext context = new PrinterPlacementContext(player, hitResult, requiredItem, slot, lookDirection, false);
+                            PrinterPlacementContext context = new PrinterPlacementContext(player, hitResult, requiredItem, slot, lookDirection, currentState.getBlock() == Blocks.CHEST);
                             BlockState result = getRequiredItemAsBlock(player)
                                     .orElse(targetState.getBlock())
                                     .getPlacementState(context);

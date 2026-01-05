@@ -2,6 +2,7 @@ package me.aleksilassila.litematica.printer.v1_21_4.implementation.actions;
 
 import me.aleksilassila.litematica.printer.v1_21_4.LitematicaMixinMod;
 import me.aleksilassila.litematica.printer.v1_21_4.actions.InteractAction;
+import me.aleksilassila.litematica.printer.v1_21_4.actions.ReleaseShiftAction;
 import me.aleksilassila.litematica.printer.v1_21_4.implementation.PrinterPlacementContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FluidBlock;
@@ -11,12 +12,14 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.BlockItem;
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.PlayerInput;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -54,13 +57,30 @@ public class AirPlaceAction extends InteractAction {
             mc.interactionManager.clickSlot(0, 45, 0, SlotActionType.PICKUP, mc.player);
             mc.getNetworkHandler().sendPacket(new CloseHandledScreenC2SPacket(mc.player.playerScreenHandler.syncId));
         }
-        connection.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ORIGIN, Direction.DOWN));
 
+        // Sneak
+        if (context.shouldSneak && !mc.options.sneakKey.isPressed()) {
+            mc.player.input.playerInput = new PlayerInput(mc.player.input.playerInput.forward(),
+                    mc.player.input.playerInput.backward(), mc.player.input.playerInput.left(), mc.player.input.playerInput.right(),
+                    mc.player.input.playerInput.jump(), true, mc.player.input.playerInput.sprint());
+            mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY));
+        }
+
+        // Perform airPlace
+        connection.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ORIGIN, Direction.DOWN));
         Hand hand = Hand.OFF_HAND;
         BlockHitResult blockHitResult = new BlockHitResult(this.context.hitResult.getPos(), this.context.hitResult.getSide(), pos, true);
         interactionManager.interactBlock(mc.player, hand, blockHitResult);
         mc.player.swingHand(Hand.MAIN_HAND, false);
         connection.sendPacket(new HandSwingC2SPacket(hand));
         connection.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ORIGIN, Direction.DOWN));
+
+        // Un-sneak
+        if (context.shouldSneak && !mc.options.sneakKey.isPressed()) {
+            mc.player.input.playerInput = new PlayerInput(mc.player.input.playerInput.forward(),
+                    mc.player.input.playerInput.backward(), mc.player.input.playerInput.left(), mc.player.input.playerInput.right(),
+                    mc.player.input.playerInput.jump(), mc.options.sneakKey.isPressed(), mc.player.input.playerInput.sprint());
+            mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY));
+        }
     }
 }
